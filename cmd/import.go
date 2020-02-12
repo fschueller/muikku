@@ -37,6 +37,9 @@ type Config struct {
 
 var pd string
 
+var jpg_ext = []string{".JPG", ".jpg", ".jpeg"}
+var raw_ext = []string{".CR3", ".CR2"}
+
 func check(err error) {
 	if err != nil {
 		log.Fatal(err)
@@ -89,9 +92,42 @@ func ImportPhotos(importPath, workbench string) error {
 	return Copy(importPath, workbench, info)
 }
 
-// Recursively copying the files in src to dest
+// Sort while copying or sort after copy operation?
+func SortbyType(dest string) string {
+	ext := filepath.Ext(dest)
+	dir := filepath.Dir(dest)
+	filename := filepath.Base(dest)
+	jpg_folder := "/JPG/"
+	raw_folder := "/RAW/"
 
-func Copy(src string, dest string, info os.FileInfo) error {
+	if contains(jpg_ext, ext) {
+		return constructPath(dir, filename, jpg_folder)
+	}
+	if contains(raw_ext, ext) {
+		return constructPath(dir, filename, raw_folder)
+	}
+	fmt.Println("Keep " + filename + " in " + dir)
+	return dest
+}
+
+func constructPath(dir, filename, folder string) string {
+	new_dest := dir + folder + filename
+	fmt.Println("Sorting " + filename + " into " + new_dest)
+	return new_dest
+}
+
+func contains(types []string, ext string) bool {
+	for _, i := range types {
+		if i == ext {
+			return true
+		}
+	}
+	return false
+}
+
+// Recursively copying the files in src to dest and sorting them on the way
+
+func Copy(src, dest string, info os.FileInfo) error {
 	if info.IsDir() {
 		return CopyDirectory(src, dest, info)
 	}
@@ -104,6 +140,7 @@ func CopyDirectory(src, dest string, info os.FileInfo) error {
 
 	for _, p := range c {
 		ps, pd := filepath.Join(src, p.Name()), filepath.Join(dest, p.Name())
+		pd = SortbyType(pd)
 		if err := Copy(ps, pd, p); err != nil {
 			return err
 		}
