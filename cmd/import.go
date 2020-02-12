@@ -1,8 +1,10 @@
 // TODO:
-// - Copy files from import to workbench
-// - Copy them into correct directories (JPG - CR3 (bonus: detect common RAW formats?))
+// - Import by time range given through optional flags
+// - Detect import path from platform (linux or macOS)
 // - Refactor
 // - Better error handling?
+// - Bonus: detect common RAW formats?
+// - Check for previous file/dir existence?
 
 package cmd
 
