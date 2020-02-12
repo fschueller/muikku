@@ -10,29 +10,29 @@ package cmd
 
 import (
 	"fmt"
-	"log"
-	"os"
-	"io"
-	"io/ioutil"
-	"path/filepath"
-	"gopkg.in/yaml.v2"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"gopkg.in/yaml.v2"
+	"io"
+	"io/ioutil"
+	"log"
+	"os"
+	"path/filepath"
 )
 
 var importCmd = &cobra.Command{
 	Use:   "import",
 	Short: "Import photos into configured workspace",
-	Long: `Import photos into workspace configured in config file`,
+	Long:  `Import photos into workspace configured in config file`,
 	Run: func(cmd *cobra.Command, args []string) {
 		main()
 	},
 }
 
 type Config struct {
-	ImportPath 			string 		`yaml:"import_path"`
-	Workspace  			string 		`yaml:"workspace"`
-	CollectionDirs	[]string	`yaml:"collection_dirs"`
+	ImportPath     string   `yaml:"import_path"`
+	Workspace      string   `yaml:"workspace"`
+	CollectionDirs []string `yaml:"collection_dirs"`
 }
 
 var pd string
@@ -50,17 +50,15 @@ func init() {
 
 func main() {
 	data, err := ioutil.ReadFile(viper.ConfigFileUsed())
-	check(err)
-
 	var config Config
 
-	if err := config.ParseConfig(data); err != nil {
-		log.Fatal(err)
-	}
+	err = config.ParseConfig(data)
+
 
 	workbench := CreateWorkbench(config.Workspace)
 	SetupWorkbench(workbench, config.CollectionDirs)
 	ImportPhotos(config.ImportPath, workbench)
+	check(err)
 }
 
 func (config *Config) ParseConfig(data []byte) error {
@@ -79,13 +77,13 @@ func SetupWorkbench(workbench string, colDirs []string) {
 	err := os.Chdir(workbench)
 	check(err)
 
-	for d := 0; d < len(colDirs); d++ {
-		err := os.MkdirAll(colDirs[d], 0777)
+	for _, d := range colDirs {
+		err := os.MkdirAll(d, 0777)
 		check(err)
 	}
 }
 
-func ImportPhotos(importPath string, workbench string) error {
+func ImportPhotos(importPath, workbench string) error {
 	info, err := os.Lstat(importPath)
 	check(err)
 	return Copy(importPath, workbench, info)
@@ -100,8 +98,7 @@ func Copy(src string, dest string, info os.FileInfo) error {
 	return CopyFile(src, dest, info)
 }
 
-func CopyDirectory(src string, dest string, info os.FileInfo) error {
-
+func CopyDirectory(src, dest string, info os.FileInfo) error {
 	c, err := ioutil.ReadDir(src)
 	check(err)
 
@@ -114,7 +111,7 @@ func CopyDirectory(src string, dest string, info os.FileInfo) error {
 	return nil
 }
 
-func CopyFile(src string, dest string, info os.FileInfo) error {
+func CopyFile(src, dest string, info os.FileInfo) error {
 	file, err := os.Create(dest)
 	check(err)
 	defer file.Close()
