@@ -10,6 +10,7 @@ package cmd
 
 import (
 	"fmt"
+	"time"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"gopkg.in/yaml.v2"
@@ -36,6 +37,10 @@ type Config struct {
 }
 
 var pd string
+var fromDateString string
+var toDateString string
+var fromDate, err = time.Parse("2006-01-02", fromDateString)
+var toDate, err := time.Parse("2006-01-02", toDateString)
 
 var jpg_ext = []string{".JPG", ".jpg", ".jpeg"}
 var raw_ext = []string{".CR3", ".CR2"}
@@ -49,6 +54,9 @@ func check(err error) {
 func init() {
 	rootCmd.AddCommand(importCmd)
 	importCmd.Flags().StringVarP(&pd, "photo directory", "p", "", "directory to import photos to. Can include subdirectories.")
+	importCmd.Flags().StringVarP(&fromDateString, "from", "f", "", "timestamp of first picture to import (format: 'YYYY-MM-DD')")
+	importCmd.Flags().StringVarP(&toDateString, "to", "t", "", "timestamp of last picture to import (format: 'YYYY-MM-DD')")
+
 }
 
 func main() {
@@ -138,6 +146,14 @@ func CopyDirectory(src, dest string, info os.FileInfo) error {
 	c, err := ioutil.ReadDir(src)
 	check(err)
 
+	for _, i := range c {
+		timestamp := i.ModTime()
+		// if inTimeRange(timestamp) {
+		// 	c += i
+		// }
+		inTimeRange(timestamp)
+	}
+
 	for _, p := range c {
 		ps, pd := filepath.Join(src, p.Name()), filepath.Join(dest, p.Name())
 		pd = SortbyType(pd)
@@ -146,6 +162,14 @@ func CopyDirectory(src, dest string, info os.FileInfo) error {
 		}
 	}
 	return nil
+}
+
+func inTimeRange(timestamp time.Time) bool {
+	fileDate := timestamp.Format("2006-01-02")
+	if fileDate.After(fromDate) {
+		return fmt.Println(fileDate)
+	}
+	return true
 }
 
 func CopyFile(src, dest string, info os.FileInfo) error {
