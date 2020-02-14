@@ -1,11 +1,3 @@
-// TODO:
-// - Import by time range given through optional flags
-// - Detect import path from platform (linux or macOS)
-// - Refactor
-// - Better error handling?
-// - Bonus: detect common RAW formats?
-// - Check for previous file/dir existence?
-
 package cmd
 
 import (
@@ -62,9 +54,10 @@ func init() {
 func main() {
 	data, err := ioutil.ReadFile(viper.ConfigFileUsed())
 	var config Config
+	fromDate, err = time.Parse("2006-01-02", fromDateString)
+	toDate, err = time.Parse("2006-01-02", toDateString)
 
 	err = config.ParseConfig(data)
-
 
 	workbench := CreateWorkbench(config.Workspace)
 	SetupWorkbench(workbench, config.CollectionDirs)
